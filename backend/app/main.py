@@ -1,10 +1,14 @@
 from fastapi import FastAPI
 
+from app.api.document import router as documents_router
 from app.api.health import router as health_router
 from app.core.config import get_settings
 
 
 settings = get_settings()
+
+API_V1_PREFIX = "/api/v1"
+
 
 app = FastAPI(
     title=settings.app_name,
@@ -15,7 +19,12 @@ app = FastAPI(
 
 app.include_router(
     health_router,
-    prefix="/api/v1",
+    prefix=API_V1_PREFIX,
+)
+
+app.include_router(
+    documents_router,
+    prefix=API_V1_PREFIX,
 )
 
 

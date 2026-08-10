@@ -1,0 +1,22 @@
+from pathlib import Path
+
+
+BASE_DIR = Path(__file__).resolve().parents[2]
+
+MAX_UPLOAD_SIZE_MB = 20
+
+STORAGE_DIR = BASE_DIR / "storage" / "documents"
+
+ALLOWED_FILE_EXTENSIONS = {
+    ".pdf",
+    ".docx",
+    ".md",
+    ".markdown",
+}
+
+ALLOWED_MIME_TYPES = {
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "text/markdown",
+    "text/plain",
+}

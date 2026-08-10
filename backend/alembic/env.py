@@ -6,6 +6,8 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from app.core.config import get_settings
+from app.database.base import Base
+from app.models import Document
 
 
 # Alembic Config object
@@ -28,7 +30,8 @@ config.set_main_option(
 
 # Metadata for autogenerate
 # We will add our models here later.
-target_metadata = None
+
+target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:
