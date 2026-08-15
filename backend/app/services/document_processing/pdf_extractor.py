@@ -1,6 +1,5 @@
-import pymupdf
 from pathlib import Path
-
+import pymupdf
 
 
 def extract_pdf_text(file_path: Path) -> str:
