@@ -4,9 +4,10 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import DateTime, Enum as SQLEnum, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
+from app.services.document_processing.chunk import DocumentChunk
 
 
 class DocumentStatus(str, Enum):
@@ -63,6 +64,11 @@ class Document(Base):
         default=DocumentStatus.UPLOADED,
         nullable=False,
         index=True,
+    )
+
+    chunks: Mapped[list["DocumentChunk"]] = relationship(
+    back_populates="document",
+    cascade="all, delete-orphan",
     )
 
     error_message: Mapped[str | None] = mapped_column(

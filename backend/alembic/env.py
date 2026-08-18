@@ -6,9 +6,10 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from app.core.config import get_settings
+from pgvector.sqlalchemy import Vector
 from app.database.base import Base
-from app.models import Document
-
+from app.models.document import Document
+from app.models.document_chunk import DocumentChunk
 
 # Alembic Config object
 config = context.config

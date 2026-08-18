@@ -20,3 +20,6 @@ ALLOWED_MIME_TYPES = {
     "text/markdown",
     "text/plain",
 }
+
+CHUNK_SIZE = 800
+CHUNK_OVERLAP = 100
