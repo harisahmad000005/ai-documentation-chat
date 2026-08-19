@@ -8,9 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.document import Document
 from app.database.base import Base
-
-
-EMBEDDING_DIMENSION = 768
+from app.core.constants import EMBEDDING_DIMENSION
 
 
 class DocumentChunk(Base):
