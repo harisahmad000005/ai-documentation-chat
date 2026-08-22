@@ -8,6 +8,7 @@ from app.database.session import get_db
 from app.schemas.question import QuestionRequest
 from app.services.ai.ollama_chat import stream_answer
 from app.services.retrieval.retriever import retrieve_similar_chunks
+from app.services.source_formatter import build_sources
 
 
 router = APIRouter(
@@ -26,71 +27,65 @@ async def ask_question(
         db=db,
     )
 
-    async def generate_response():
+    async def generate():
+        # ---------------------------------------------------------
         # No relevant context
+        # ---------------------------------------------------------
         if not chunks:
-            yield (
-                "event: token\n"
-                "data: I could not find relevant information "
-                "in the documents.\n\n"
-            )
+            yield json.dumps(
+                {
+                    "type": "answer",
+                    "content": (
+                        "I could not find relevant information "
+                        "in the documents."
+                    ),
+                }
+            ) + "\n"
 
-            yield (
-                "event: sources\n"
-                "data: []\n\n"
-            )
-
-            yield "event: done\ndata: {}\n\n"
+            yield json.dumps(
+                {
+                    "type": "sources",
+                    "sources": [],
+                }
+            ) + "\n"
 
             return
 
+        # ---------------------------------------------------------
         # Build context for the LLM
+        # ---------------------------------------------------------
         context = "\n\n".join(
             chunk.content
             for chunk, _ in chunks
         )
 
-        # Stream the answer
+        # ---------------------------------------------------------
+        # Stream answer tokens
+        # ---------------------------------------------------------
         async for token in stream_answer(
             question=request.question,
             context=context,
         ):
-            yield (
-                "event: token\n"
-                f"data: {json.dumps(token)}\n\n"
-            )
+            yield json.dumps(
+                {
+                    "type": "answer",
+                    "content": token,
+                }
+            ) + "\n"
 
-        # Build sources
-        sources = []
+        # ---------------------------------------------------------
+        # Send sources after the answer finishes
+        # ---------------------------------------------------------
+        sources = build_sources(chunks)
 
-        for chunk, _ in chunks:
-            metadata = chunk.metadata_ or {}
-
-            source = {
-                "document": metadata.get("document"),
-                "page": metadata.get("page"),
-                "line_start": metadata.get("line_start"),
-                "line_end": metadata.get("line_end"),
+        yield json.dumps(
+            {
+                "type": "sources",
+                "sources": sources,
             }
-
-            # Avoid duplicate sources
-            if source not in sources:
-                sources.append(source)
-
-        # Send sources after the answer
-        yield (
-            "event: sources\n"
-            f"data: {json.dumps(sources)}\n\n"
-        )
-
-        # Signal completion
-        yield "event: done\ndata: {}\n\n"
+        ) + "\n"
 
     return StreamingResponse(
-        generate_response(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-        },
+        generate(),
+        media_type="application/x-ndjson",
     )
