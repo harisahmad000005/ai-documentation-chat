@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     ollama_base_url: str = "http://localhost:11434"
     ollama_chat_model: str = "llama3.2"
     ollama_embedding_model: str = "nomic-embed-text"
+    admin_username: str
+    admin_password: str
+    admin_secret_key: str
 
 
     model_config = SettingsConfigDict(

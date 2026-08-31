@@ -3,10 +3,12 @@ from fastapi import FastAPI
 from app.api.document import router as documents_router
 from app.api.health import router as health_router
 from app.api.question import router as questions_router
+from app.admin.setup import setup_admin
 from app.core.config import get_settings
 
 
 settings = get_settings()
+
 
 API_V1_PREFIX = "/api/v1"
 
@@ -17,6 +19,7 @@ app = FastAPI(
     debug=settings.debug,
 )
 
+setup_admin(app)
 
 app.include_router(
     health_router,
