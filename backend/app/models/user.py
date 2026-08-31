@@ -7,6 +7,7 @@ from app.database.base import Base
 from app.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
+    from app.models.chat import Chat
     from app.models.document import Document
 
 
@@ -21,6 +22,11 @@ class User(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     )
 
     documents: Mapped[list["Document"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+    chats: Mapped[list["Chat"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
     )
