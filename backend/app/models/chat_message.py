@@ -1,6 +1,6 @@
+import uuid
 from enum import Enum
 from typing import TYPE_CHECKING
-from uuid import UUID
 
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy import ForeignKey, Text
@@ -22,7 +22,7 @@ class MessageRole(str, Enum):
 class ChatMessage(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     __tablename__ = "chat_messages"
 
-    chat_id: Mapped[UUID] = mapped_column(
+    chat_id: Mapped[uuid.UUID] = mapped_column(
         PGUUID(as_uuid=True),
         ForeignKey("chats.id", ondelete="CASCADE"),
         nullable=False,
