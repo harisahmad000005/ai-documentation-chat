@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
-
+import secrets
+import hashlib
 import bcrypt
 from jose import jwt
 
@@ -43,11 +44,13 @@ def create_access_token(user_id: UUID) -> str:
     )
 
 
+def create_refresh_token() -> str:
+    return secrets.token_urlsafe(64)
+
+
+def hash_refresh_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8"),).hexdigest()
+
 def decode_access_token(token: str) -> dict:
     settings = get_settings()
-
-    return jwt.decode(
-        token,
-        settings.jwt_secret_key,
-        algorithms=[settings.jwt_algorithm],
-    )
+    return jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm], )
