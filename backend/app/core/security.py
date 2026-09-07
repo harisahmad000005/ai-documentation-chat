@@ -34,6 +34,7 @@ def create_access_token(user_id: UUID) -> str:
 
     payload = {
         "sub": str(user_id),
+        "type": "access",
         "exp": expires_at,
     }
 
@@ -44,13 +45,37 @@ def create_access_token(user_id: UUID) -> str:
     )
 
 
-def create_refresh_token() -> str:
-    return secrets.token_urlsafe(64)
+def create_refresh_token(user_id: UUID) -> str:
+    settings = get_settings()
+
+    expires_at = datetime.now(timezone.utc) + timedelta(
+        days=settings.refresh_token_expire_days,
+    )
+
+    payload = {
+        "sub": str(user_id),
+        "type": "refresh",
+        "exp": expires_at,
+    }
+
+    return jwt.encode(
+        payload,
+        settings.jwt_secret_key,
+        algorithm=settings.jwt_algorithm,
+    )
 
 
 def hash_refresh_token(token: str) -> str:
-    return hashlib.sha256(token.encode("utf-8"),).hexdigest()
+    return hashlib.sha256(
+        token.encode("utf-8"),
+    ).hexdigest()
 
-def decode_access_token(token: str) -> dict:
+
+def decode_token(token: str) -> dict:
     settings = get_settings()
-    return jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm], )
+
+    return jwt.decode(
+        token,
+        settings.jwt_secret_key,
+        algorithms=[settings.jwt_algorithm],
+    )

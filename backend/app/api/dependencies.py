@@ -6,7 +6,7 @@ from jose import JWTError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import decode_access_token
+from app.core.security import decode_token
 from app.database.session import get_db
 from app.models.user import User
 
@@ -26,7 +26,7 @@ async def get_current_user(
     )
 
     try:
-        payload = decode_access_token(token)
+        payload = decode_token(token)
 
         subject = payload.get("sub")
 
