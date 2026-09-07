@@ -24,7 +24,6 @@ from app.utils.file_upload_handling import (
     validate_file,
 )
 
-
 router = APIRouter(
     prefix="/documents",
     tags=["Documents"],

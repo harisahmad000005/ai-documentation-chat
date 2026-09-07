@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
-import secrets
 import hashlib
 import bcrypt
 from jose import jwt
