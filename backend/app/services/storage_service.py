@@ -6,7 +6,6 @@ from fastapi import UploadFile
 
 from app.core.constants import STORAGE_DIR
 
-
 CHUNK_SIZE = 1024 * 1024  # 1 MB
 
 

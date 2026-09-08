@@ -1,3 +1,4 @@
+import uuid
 from uuid import uuid4
 
 from fastapi import (
@@ -9,13 +10,16 @@ from fastapi import (
     status,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
-from uuid import uuid4
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
-from sqlalchemy.ext.asyncio import AsyncSession
-
+from app.api.dependencies import get_current_user
 from app.database.session import get_db
+from app.models.document import Document
+from app.models.user import User
 from app.schemas.document import DocumentResponse
+from app.services.document_service import (
+    get_user_document,
+    get_user_documents,
+)
 from app.services.storage_service import StorageService
 from app.utils.file_upload_handling import (
     check_duplicate,
@@ -39,8 +43,9 @@ storage_service = StorageService()
 )
 async def upload_document(
     file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> Document:
     extension = validate_file(file)
     document_id = uuid4()
 
@@ -59,6 +64,7 @@ async def upload_document(
 
         document = create_document(
             document_id=document_id,
+            user_id=current_user.id,
             file=file,
             extension=extension,
             file_size=file_size,
@@ -86,7 +92,81 @@ async def upload_document(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to upload document",
-        )
+        ) from None
 
     finally:
         await file.close()
+
+
+@router.get(
+    "",
+    response_model=list[DocumentResponse],
+)
+async def list_documents(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> list[Document]:
+    return await get_user_documents(
+        db=db,
+        user_id=current_user.id,
+    )
+
+
+@router.get(
+    "/{document_id}",
+    response_model=DocumentResponse,
+)
+async def get_document(
+    document_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Document:
+    document = await get_user_document(
+        db=db,
+        user_id=current_user.id,
+        document_id=document_id,
+    )
+
+    if document is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found",
+        )
+
+    return document
+
+
+@router.delete(
+    "/{document_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_document(
+    document_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    document = await get_user_document(
+        db=db,
+        user_id=current_user.id,
+        document_id=document_id,
+    )
+
+    if document is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found",
+        )
+
+    try:
+        storage_service.delete(document.id)
+
+        await db.delete(document)
+        await db.commit()
+
+    except Exception:
+        await db.rollback()
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete document",
+        ) from None

@@ -13,7 +13,6 @@ from app.core.constants import (
 from app.models.document import Document, DocumentStatus
 from app.services.storage_service import StorageService
 
-
 MAX_UPLOAD_SIZE = MAX_UPLOAD_SIZE_MB * 1024 * 1024
 
 
@@ -69,9 +68,7 @@ async def check_duplicate(
     file_hash: str,
 ):
     existing_document = await db.scalar(
-        select(Document).where(
-            Document.file_hash == file_hash
-        )
+        select(Document).where(Document.file_hash == file_hash)
     )
 
     if existing_document:
@@ -83,6 +80,7 @@ async def check_duplicate(
 
 def create_document(
     document_id: UUID,
+    user_id: UUID,
     file: UploadFile,
     extension: str,
     file_size: int,
@@ -93,15 +91,14 @@ def create_document(
 
     return Document(
         id=document_id,
+        user_id=user_id,
         filename=f"original{extension}",
         original_filename=Path(file.filename).name,
         file_type=file.content_type,
         file_size=file_size,
         file_hash=file_hash,
         storage_path=str(
-            file_path.relative_to(
-                storage_service.storage_dir.parent.parent
-            )
+            file_path.relative_to(storage_service.storage_dir.parent.parent)
         ),
         status=DocumentStatus.UPLOADED,
     )
