@@ -30,17 +30,23 @@ async def main() -> None:
             print("No documents found.")
             return
 
-        question = "What is the company's vacation policy?"
+        if document.user_id is None:
+            print("Document has no owner.")
+            return
+
+        # question = "What is the company's vacation policy?"
+        question = "What file types are supported?"
 
         print(f"Document: {document.original_filename}")
+        print(f"User ID: {document.user_id}")
         print(f"Question: {question}")
         print()
 
         chunks = await retrieve_similar_chunks(
             question=question,
             db=db,
+            user_id=document.user_id,
             document_id=document.id,
-            top_k=3,
         )
 
         print(f"Retrieved chunks: {len(chunks)}")

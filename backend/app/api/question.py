@@ -4,7 +4,9 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.dependencies import get_current_user
 from app.database.session import get_db
+from app.models.user import User
 from app.schemas.question import QuestionRequest
 from app.services.ai.ollama_chat import stream_answer
 from app.services.retrieval.retriever import retrieve_similar_chunks
@@ -20,11 +22,13 @@ router = APIRouter(
 @router.post("")
 async def ask_question(
     request: QuestionRequest,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     chunks = await retrieve_similar_chunks(
         question=request.question,
         db=db,
+        user_id=current_user.id,
     )
 
     async def generate():
